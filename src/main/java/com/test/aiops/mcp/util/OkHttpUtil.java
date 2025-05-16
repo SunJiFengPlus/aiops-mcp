@@ -28,4 +28,18 @@ public class OkHttpUtil {
             return null;
         }
     }
+
+    public static String get(String url) {
+        Request request = new Request.Builder().url(url).get().build();
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                return response.body().string();
+            }
+            log.error("HTTP请求失败, url: {}, statusCode: {}, body: {}", url, response.code(), response.body().string());
+            return null;
+        } catch (IOException e) {
+            log.error("HTTP请求失败, url: {}, body: {}", url, e);
+            return null;
+        }
+    }
 }

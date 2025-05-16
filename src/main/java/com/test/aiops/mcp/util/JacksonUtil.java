@@ -2,7 +2,10 @@ package com.test.aiops.mcp.util;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
 
 public class JacksonUtil {
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -24,6 +27,14 @@ public class JacksonUtil {
         try {
             return objectMapper.readValue(json, valueType);
         } catch (JsonProcessingException e) {
+            throw new RuntimeException("反序列化失败", e);
+        }
+    }
+    
+    public static <T> T fromJson(String json, TypeReference<T> typeReference) {
+        try {
+            return objectMapper.readValue(json, typeReference);
+        } catch (IOException e) {
             throw new RuntimeException("反序列化失败", e);
         }
     }

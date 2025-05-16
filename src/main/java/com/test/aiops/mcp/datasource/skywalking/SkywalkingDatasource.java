@@ -24,6 +24,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * TODO: 在tools层面通过具体异常信息来引导模型调整传入参数
+ */
 @Slf4j
 @Component
 public class SkywalkingDatasource implements LogDatasource<LogListResponse>, TraceDatasource<TraceListResponse, TraceDetailResponse> {
