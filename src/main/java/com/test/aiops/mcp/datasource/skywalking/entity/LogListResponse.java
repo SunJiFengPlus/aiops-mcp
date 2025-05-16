@@ -1,28 +1,29 @@
 package com.test.aiops.mcp.datasource.skywalking.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
 @Data
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class LogResponse {
+@NoArgsConstructor
+public class LogListResponse {
     private Data data;
 
     @lombok.Data
-    @JsonIgnoreProperties(ignoreUnknown = true)
+    @NoArgsConstructor
     public static class Data {
         private QueryLogs queryLogs;
     }
 
     @lombok.Data
-    @JsonIgnoreProperties(ignoreUnknown = true)
+    @NoArgsConstructor
     public static class QueryLogs {
         private List<Log> logs;
     }
 
     @lombok.Data
-    @JsonIgnoreProperties(ignoreUnknown = true)
+    @NoArgsConstructor
     public static class Log {
         private String serviceName;
         private String serviceId;
@@ -34,13 +35,13 @@ public class LogResponse {
         private Long timestamp;
         private String contentType;
         private String content;
-        private List<Tag> tags;
+        private List<KeyValue> tags;
     }
 
     @lombok.Data
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Tag {
+    @NoArgsConstructor
+    public static class KeyValue {
         private String key;
         private String value;
     }
-}
+} 

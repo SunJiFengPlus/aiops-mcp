@@ -6,7 +6,7 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TraceResponse {
+public class TraceListResponse {
     private Data data;
 
     @lombok.Data

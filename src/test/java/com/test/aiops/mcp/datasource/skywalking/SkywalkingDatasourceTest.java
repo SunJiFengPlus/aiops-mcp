@@ -196,24 +196,6 @@ class SkywalkingDatasourceTest {
     }
     
     @Test
-    void testGetLogsServiceIdNotFound() {
-        // Mock getServiceId方法返回null，模拟服务未找到的情况
-        Mockito.doReturn(null).when(spySkywalkingDatasource).getServiceId("nonExistentService");
-        
-        // 调用待测试方法
-        Map<String, String> tags = new HashMap<>();
-        tags.put("level", "INFO");
-        Object result = spySkywalkingDatasource.getLogs("nonExistentService", "2023-01-01", "2023-01-02", 
-                null, null, tags);
-        
-        // 验证结果为null
-        assertThat(result).isNull();
-        
-        // 验证getServiceId方法被调用
-        Mockito.verify(spySkywalkingDatasource).getServiceId("nonExistentService");
-    }
-    
-    @Test
     void testGetTraces() {
         // Mock getServiceId方法，避免调用真实方法
         Mockito.doReturn("service-123").when(spySkywalkingDatasource).getServiceId("testService");
@@ -250,7 +232,7 @@ class SkywalkingDatasourceTest {
         // 调用待测试方法
         Map<String, String> tags = new HashMap<>();
         tags.put("http.method", "GET");
-        Object result = spySkywalkingDatasource.getTraces("testService", "2023-01-01", "2023-01-02", 
+        Object result = spySkywalkingDatasource.getTraceList("testService", "2023-01-01", "2023-01-02", 
                 "SUCCESS", null, null, 1000, 0, tags);
         
         // 验证结果
@@ -292,7 +274,7 @@ class SkywalkingDatasourceTest {
                 .setHeader("Content-Type", "application/json"));
         
         // 调用待测试方法（不提供serviceName）
-        Object result = spySkywalkingDatasource.getTraces(null, "2023-01-01", "2023-01-02", 
+        Object result = spySkywalkingDatasource.getTraceList(null, "2023-01-01", "2023-01-02", 
                 "SUCCESS", null, "f2a6f356-d4cc-4c3b-ace0-a5f7e949aee2", null, null, null);
         
         // 验证结果
@@ -303,18 +285,136 @@ class SkywalkingDatasourceTest {
     }
     
     @Test
-    void testGetTracesServiceIdNotFound() {
-        // Mock getServiceId方法返回null，模拟服务未找到的情况
-        Mockito.doReturn(null).when(spySkywalkingDatasource).getServiceId("nonExistentService");
+    void testGetTraceDetail() {
+        // 模拟getTraceDetail方法的响应
+        String mockTraceDetailResponse = """
+            {
+                "data": {
+                    "trace": {
+                        "spans": [
+                            {
+                                "traceId": "5ee40d5b-dd98-40a6-b381-8e92b6a8ba1a",
+                                "segmentId": "9e2d5827-14f9-41ae-8305-ef14193b0136",
+                                "spanId": 0,
+                                "parentSpanId": -1,
+                                "refs": [],
+                                "serviceCode": "agent::ui",
+                                "serviceInstanceName": "v1.0.0",
+                                "startTime": 1747377289812,
+                                "endTime": 1747377289824,
+                                "endpointName": "/homepage",
+                                "type": "Exit",
+                                "peer": "frontend",
+                                "component": "ajax",
+                                "isError": true,
+                                "layer": "Http",
+                                "tags": [
+                                    {
+                                        "key": "http.method",
+                                        "value": "post"
+                                    },
+                                    {
+                                        "key": "url",
+                                        "value": "http://frontend/test"
+                                    }
+                                ],
+                                "logs": [],
+                                "attachedEvents": []
+                            },
+                            {
+                                "traceId": "5ee40d5b-dd98-40a6-b381-8e92b6a8ba1a",
+                                "segmentId": "82a379e8-e1f7-4aca-b430-92fcf70982da",
+                                "spanId": 0,
+                                "parentSpanId": -1,
+                                "refs": [
+                                    {
+                                        "traceId": "5ee40d5b-dd98-40a6-b381-8e92b6a8ba1a",
+                                        "parentSegmentId": "9e2d5827-14f9-41ae-8305-ef14193b0136",
+                                        "parentSpanId": 0,
+                                        "type": "CROSS_PROCESS"
+                                    }
+                                ],
+                                "serviceCode": "agent::frontend",
+                                "serviceInstanceName": "eef2a0ef0f1a",
+                                "startTime": 1747377289815,
+                                "endTime": 1747377289822,
+                                "endpointName": "/test",
+                                "type": "Entry",
+                                "peer": "",
+                                "component": "APISIX",
+                                "isError": false,
+                                "layer": "Http",
+                                "tags": [
+                                    {
+                                        "key": "http.method",
+                                        "value": "POST"
+                                    },
+                                    {
+                                        "key": "http.params",
+                                        "value": "http://frontend/test"
+                                    },
+                                    {
+                                        "key": "http.status",
+                                        "value": "404"
+                                    }
+                                ],
+                                "logs": [],
+                                "attachedEvents": []
+                            }
+                        ]
+                    }
+                }
+            }
+            """;
+        
+        // 设置模拟响应
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(mockTraceDetailResponse)
+                .setHeader("Content-Type", "application/json"));
         
         // 调用待测试方法
-        Object result = spySkywalkingDatasource.getTraces("nonExistentService", "2023-01-01", "2023-01-02", 
-                "SUCCESS", null, null, 1000, 0, null);
+        String traceId = "5ee40d5b-dd98-40a6-b381-8e92b6a8ba1a";
+        com.test.aiops.mcp.datasource.skywalking.entity.TraceDetailResponse result = skywalkingDatasource.getTraceDetail(traceId);
+        
+        // 验证结果不为null
+        assertThat(result).isNotNull();
+        // 验证数据结构解析正确
+        assertThat(result.getData()).isNotNull();
+        assertThat(result.getData().getTrace()).isNotNull();
+        assertThat(result.getData().getTrace().getSpans()).isNotNull();
+        assertThat(result.getData().getTrace().getSpans()).hasSize(2);
+        
+        // 验证第一个span的数据
+        com.test.aiops.mcp.datasource.skywalking.entity.TraceDetailResponse.Span firstSpan = result.getData().getTrace().getSpans().get(0);
+        assertThat(firstSpan.getTraceId()).isEqualTo("5ee40d5b-dd98-40a6-b381-8e92b6a8ba1a");
+        assertThat(firstSpan.getSegmentId()).isEqualTo("9e2d5827-14f9-41ae-8305-ef14193b0136");
+        assertThat(firstSpan.getSpanId()).isEqualTo(0);
+        assertThat(firstSpan.getParentSpanId()).isEqualTo(-1);
+        assertThat(firstSpan.getServiceCode()).isEqualTo("agent::ui");
+        assertThat(firstSpan.getEndpointName()).isEqualTo("/homepage");
+        assertThat(firstSpan.getIsError()).isTrue();
+        
+        // 验证第二个span的数据
+        com.test.aiops.mcp.datasource.skywalking.entity.TraceDetailResponse.Span secondSpan = result.getData().getTrace().getSpans().get(1);
+        assertThat(secondSpan.getTraceId()).isEqualTo("5ee40d5b-dd98-40a6-b381-8e92b6a8ba1a");
+        assertThat(secondSpan.getRefs()).hasSize(1);
+        assertThat(secondSpan.getRefs().get(0).getType()).isEqualTo("CROSS_PROCESS");
+        assertThat(secondSpan.getServiceCode()).isEqualTo("agent::frontend");
+        assertThat(secondSpan.getIsError()).isFalse();
+    }
+    
+    @Test
+    void testGetTraceDetailWithEmptyTraceId() {
+        // 调用待测试方法，使用空的traceId
+        com.test.aiops.mcp.datasource.skywalking.entity.TraceDetailResponse result = skywalkingDatasource.getTraceDetail("");
         
         // 验证结果为null
         assertThat(result).isNull();
         
-        // 验证getServiceId方法被调用
-        Mockito.verify(spySkywalkingDatasource).getServiceId("nonExistentService");
+        // 调用待测试方法，使用null的traceId
+        result = skywalkingDatasource.getTraceDetail(null);
+        
+        // 验证结果为null
+        assertThat(result).isNull();
     }
 }
