@@ -1,6 +1,9 @@
 package com.test.aiops.mcp.tools;
 
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.test.aiops.mcp.util.TimeZoneUtil;
@@ -21,23 +24,41 @@ public class SkywalkingTools {
     @Resource
     private SkywalkingDatasource skywalkingDatasource;
 
-    @Tool(description = "获取固定时间区间内的错误的traceId")
-    public List<String> getErrorTraceIds(
+    private final static DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
+
+    @Tool(description = "获取服务在指定时间区间的错误的traceId")
+    public Set<String> getErrorTraceIds(
+        @ToolParam(description = "服务名", required = false) String serviceName,
         @ToolParam(description = "开始时间, 格式: yyyy-MM-dd HHmm, 例如: 2025-05-16 0920") String startTime,
-        @ToolParam(description = "结束时间, 格式: yyyy-MM-dd HHmm, 例如: 2025-05-16 0920") String endTime,
-        @ToolParam(description = "traceId数量") Integer limit
+        @ToolParam(description = "结束时间, 格式: yyyy-MM-dd HHmm, 例如: 2025-05-16 0920") String endTime
     ) {
         // 转换时区, skywalking 接口使用 UTC 时区
         String utcStartTime = TimeZoneUtil.convertToUtc(startTime);
         String utcEndTime = TimeZoneUtil.convertToUtc(endTime);
         
-        TraceListResponse traces = skywalkingDatasource.getTraceList(null, utcStartTime, utcEndTime, "ERROR", null, null, null, null, null);
-        return traces.getData().getData().getTraces()
+        // 根据错误Trace取
+        TraceListResponse traces = skywalkingDatasource.getTraceList(serviceName, utcStartTime, utcEndTime, "ERROR", null, null, null, null, null);
+        Set<String> traceIds = traces.getData().getData().getTraces()
             .stream()
             .map(TraceListResponse.Trace::getTraceIds)
             .flatMap(List::stream)
-            .limit(limit)
-            .collect(Collectors.toList());
+            .distinct()
+            .limit(2)
+            .collect(Collectors.toSet());
+        
+        // 根据错误日志取
+        Map<String, String> tag = Collections.singletonMap("level", "ERROR");
+        skywalkingDatasource.getLogs(serviceName, utcStartTime, utcEndTime, null, null, tag)
+            .getData()
+            .getQueryLogs()
+            .getLogs()
+            .stream()
+            .sorted(Comparator.comparing(LogListResponse.Log::getTimestamp))
+            .map(LogListResponse.Log::getTraceId)
+            .distinct()
+            .limit(2)
+            .forEach(traceIds::add);
+        return traceIds;
     }
 
     @Tool(description = "根据traceId获取trace详情")

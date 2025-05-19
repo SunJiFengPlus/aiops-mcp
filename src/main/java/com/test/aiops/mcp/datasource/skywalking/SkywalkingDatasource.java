@@ -47,10 +47,13 @@ public class SkywalkingDatasource implements LogDatasource<LogListResponse>, Tra
     @Override
     public LogListResponse getLogs(String serviceName, String startTime, String endTime, String instance, String traceId,
             Map<String, String> tags) {
-        String serviceId = getServiceId(serviceName);
-        if (Objects.isNull(serviceId)) {
-            log.error("获取服务ID失败, serviceName: {}", serviceName);
-            return null;
+        String serviceId = null;
+        if (Objects.nonNull(serviceName)) {
+            serviceId = getServiceId(serviceName);
+            if (Objects.isNull(serviceId)) {
+                log.error("获取服务ID失败, serviceName: {}", serviceName);
+                return null;
+            }
         }
 
         LogQueryRequest logQueryRequest = LogQueryRequest.create(startTime, endTime, serviceId, instance, traceId, tags);
