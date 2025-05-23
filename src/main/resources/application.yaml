@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: aiops-mcp
+
+datasource:
+  skywalking:
+    endpoint: "http://skywalking-server:8080"
+    graphqlPath: "/graphql"
+    log:
+      enable: true
+    trace:
+      enable: true

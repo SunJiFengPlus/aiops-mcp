@@ -1,4 +1,4 @@
-package com.test.aiops.mcp.tools;
+package com.test.aiops.mcp.config;
 
 import com.test.aiops.mcp.util.TimeZoneUtil;
 import org.junit.jupiter.params.ParameterizedTest;

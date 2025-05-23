@@ -1,4 +1,4 @@
-package com.test.aiops.mcp.tools;
+package com.test.aiops.mcp.config;
 
 import java.time.ZonedDateTime;
 
