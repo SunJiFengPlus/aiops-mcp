@@ -5,9 +5,9 @@
 4. 单一类型的可观测数据可能会来自多个系统, metric可能会来prometheus与skywalking 
 
 
-
-datasource/skywalking: skywalking数据源对接
-datasource/skywalking/config: yaml中的配置读取
-datasource/skywalking/entity: 数据源实体, 用于数据序列化反序列化
-datasource/skywalking/repo: 数据源接口, 直接通过http等协议对接外部系统的
-datasource/skywalking/tools: 工具逻辑
+---
+- datasource/skywalking: skywalking数据源对接
+- datasource/skywalking/config: yaml中的配置读取
+- datasource/skywalking/entity: 数据源实体, 用于数据序列化反序列化
+- datasource/skywalking/repo: 数据源接口, 直接通过http等协议对接外部系统的
+- datasource/skywalking/tools: 工具逻辑
